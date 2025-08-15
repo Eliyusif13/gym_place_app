@@ -32,4 +32,24 @@ public class CategoryController {
     public List<CategoryResponse> all() {
         return repo.findAll().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getIcon())).toList();
     }
+    @PutMapping("/{id}")
+    public CategoryResponse update(@PathVariable Long id, @RequestBody @Valid CreateCategoryRequest req) {
+        Category c = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Category not found"));
+        if (repo.existsBySlug(req.slug())) throw new IllegalArgumentException("Slug already exists");
+
+        c.setName(req.name());
+        c.setSlug(req.slug());
+        c.setIcon(req.icon());
+        repo.save(c);
+
+        return new CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getIcon());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        Category c = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Category not found"));
+        repo.delete(c);
+    }
+
 }
