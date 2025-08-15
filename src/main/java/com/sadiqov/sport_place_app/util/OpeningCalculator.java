@@ -1,26 +1,38 @@
 package com.sadiqov.sport_place_app.util;
-
-
-import com.sadiqov.sport_place_app.dto.PlaceDtos;
-import com.sadiqov.sport_place_app.dto.PlaceDtos.ScheduleDto;
-
+import com.sadiqov.sport_place_app.entity.PlaceSchedule;
 import java.time.*;
+import java.util.List;
 
 public class OpeningCalculator {
 
-    public static boolean isOpenNow(Iterable<PlaceDtos.ScheduleDto> schedules) {
+    public static boolean isOpenNow(List<PlaceSchedule> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
+            return false;
+        }
+
         ZoneId zone = ZoneId.of("Asia/Baku");
         ZonedDateTime now = ZonedDateTime.now(zone);
         DayOfWeek today = now.getDayOfWeek();
-        LocalTime t = now.toLocalTime();
+        LocalTime currentTime = now.toLocalTime();
 
-        for (ScheduleDto s : schedules) {
-            if (s.day() != today) continue;
+        for (PlaceSchedule schedule : schedules) {
+            if (schedule == null) continue;
 
-            if (!s.spansMidnight()) {
-                if (!t.isBefore(s.openTime()) && t.isBefore(s.closeTime())) return true;
+            DayOfWeek scheduleDay = schedule.getDay();
+            LocalTime openTime = schedule.getOpenTime();
+            LocalTime closeTime = schedule.getCloseTime();
+            boolean spansMidnight = schedule.isSpansMidnight();
+
+            if (scheduleDay != today) continue;
+
+            if (!spansMidnight) {
+                if (!currentTime.isBefore(openTime) && currentTime.isBefore(closeTime)) {
+                    return true;
+                }
             } else {
-                if (!t.isBefore(s.openTime()) || t.isBefore(s.closeTime())) return true;
+                if (!currentTime.isBefore(openTime) || currentTime.isBefore(closeTime)) {
+                    return true;
+                }
             }
         }
         return false;

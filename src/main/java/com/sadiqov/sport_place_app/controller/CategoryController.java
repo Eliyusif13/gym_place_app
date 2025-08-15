@@ -1,11 +1,11 @@
 package com.sadiqov.sport_place_app.controller;
 
-import com.sadiqov.sport_place_app.entity.Category;
-import com.sadiqov.sport_place_app.repo.CategoryRepository;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
+import com.sadiqov.sport_place_app.dto.PlaceDtos.*;
+import com.sadiqov.sport_place_app.service.CategoryService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,41 +15,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryController {
 
-    private final CategoryRepository repo;
+    private final CategoryService categoryService;
 
-    public record CreateCategoryRequest(@NotBlank String name, @NotBlank String slug, String icon) {}
-    public record CategoryResponse(Long id, String name, String slug, String icon) {}
+
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryResponse create(@RequestBody @Valid CreateCategoryRequest req) {
-        if (repo.existsBySlug(req.slug())) throw new IllegalArgumentException("Slug already exists");
-        Category c = repo.save(Category.builder().name(req.name()).slug(req.slug()).icon(req.icon()).build());
-        return new CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getIcon());
+    public ResponseEntity<String> create(@RequestBody CreateCategoryRequest request) {
+         categoryService.createCategory(request);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping
-    public List<CategoryResponse> all() {
-        return repo.findAll().stream().map(c -> new CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getIcon())).toList();
+    public List<CategoryResponse> getAll() {
+        return categoryService.getAllCategories();
     }
+
+    @GetMapping("/{id}")
+    public CategoryResponse getById(@PathVariable Long id) {
+        return categoryService.getCategoryById(id);
+    }
+
     @PutMapping("/{id}")
-    public CategoryResponse update(@PathVariable Long id, @RequestBody @Valid CreateCategoryRequest req) {
-        Category c = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Category not found"));
-        if (repo.existsBySlug(req.slug())) throw new IllegalArgumentException("Slug already exists");
-
-        c.setName(req.name());
-        c.setSlug(req.slug());
-        c.setIcon(req.icon());
-        repo.save(c);
-
-        return new CategoryResponse(c.getId(), c.getName(), c.getSlug(), c.getIcon());
+    public CategoryResponse update(@PathVariable Long id, @RequestBody  CreateCategoryRequest request) {
+        return categoryService.updateCategory(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        Category c = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Category not found"));
-        repo.delete(c);
+        categoryService.deleteCategory(id);
     }
-
 }

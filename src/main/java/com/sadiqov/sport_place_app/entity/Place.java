@@ -58,11 +58,10 @@ public class Place {
     private Instant updatedAt;
 
     public void setSchedules(List<PlaceSchedule> schedules) {
-
         this.schedules.clear();
         if (schedules != null) {
-            schedules.forEach(s -> s.setPlace(this));
             this.schedules.addAll(schedules);
         }
     }
+
 }
